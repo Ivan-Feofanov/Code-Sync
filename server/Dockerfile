@@ -1,5 +1,5 @@
 # Stage 1: Build the project
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /build
 
@@ -15,7 +15,7 @@ RUN npm run build
 RUN npm prune --omit=dev
 
 # Stage 2: Copy only the `dist` folder
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 
 WORKDIR /app
 
