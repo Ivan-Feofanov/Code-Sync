@@ -20,14 +20,14 @@ Piston instance so no candidate code leaves the server.
 ## Source project
 
 Fork of [sahilatahar/Code-Sync](https://github.com/sahilatahar/Code-Sync) to
-`github.com/Ivan-Feofanov/Code-Sync`. All changes are commits in the fork; the
+`github.com/<your-github-user>/Code-Sync`. All changes are commits in the fork; the
 VPS deploys from the fork via Dokku git remotes.
 
 ## Target environment
 
 - Hetzner VPS: 2 vCPU, 4 GB RAM, 20 GB disk
 - Host already runs Dokku with the `letsencrypt` plugin configured
-- Domain `feofanov.dev` with DNS control
+- Domain `example.com` with DNS control
 - Existing nginx is managed by Dokku — no manual vhosts
 
 ## Architecture
@@ -35,8 +35,8 @@ VPS deploys from the fork via Dokku git remotes.
 Three Dokku apps on a shared Dokku network. Two are public, one is internal.
 
 ```
-Internet (443) ─► Dokku nginx ─┬─► interview-client   (interview.feofanov.dev)
-                               └─► interview-server   (api.interview.feofanov.dev)
+Internet (443) ─► Dokku nginx ─┬─► interview-client   (<CLIENT_DOMAIN>)
+                               └─► interview-server   (<SERVER_DOMAIN>)
 
 Dokku network "interview-net":
     interview-client  ─► interview-server  ─► interview-piston  (no public domain)
@@ -61,7 +61,7 @@ strongly one-app-per-domain. The cost is a tiny CORS allowlist on the server.
 - `VITE_BACKEND_URL` is a Vite **build-time** variable, so it must be passed as
   a Docker build arg, not a runtime env var. Dokku does not pass `config:set`
   values into builds by default, so we use:
-  `dokku docker-options:add interview-client build "--build-arg VITE_BACKEND_URL=https://api.interview.feofanov.dev"`
+  `dokku docker-options:add interview-client build "--build-arg VITE_BACKEND_URL=https://<SERVER_DOMAIN>"`
   and add `ARG VITE_BACKEND_URL` + `ENV VITE_BACKEND_URL=$VITE_BACKEND_URL` to
   the client Dockerfile before `npm run build`.
 - Serves static `dist/` via `serve -s dist -l $PORT`
@@ -73,7 +73,7 @@ strongly one-app-per-domain. The cost is a tiny CORS allowlist on the server.
 - Based on existing `server/Dockerfile`, upgraded to `node:20-alpine`
 - Env:
   - `PORT` — injected by Dokku
-  - `CORS_ORIGIN=https://interview.feofanov.dev`
+  - `CORS_ORIGIN=https://<CLIENT_DOMAIN>`
   - `PISTON_URL=http://interview-piston.web:2000/api/v2`
 - Code additions:
   - `POST /api/execute` endpoint that forwards `{language, version, code, stdin}`
@@ -143,27 +143,27 @@ mkdir -p /var/lib/dokku/data/storage/piston
 dokku storage:mount interview-piston /var/lib/dokku/data/storage/piston:/piston/packages
 
 # public domains + TLS
-dokku domains:set interview-client interview.feofanov.dev
-dokku domains:set interview-server api.interview.feofanov.dev
+dokku domains:set interview-client <CLIENT_DOMAIN>
+dokku domains:set interview-server <SERVER_DOMAIN>
 dokku letsencrypt:enable interview-client
 dokku letsencrypt:enable interview-server
 
 # server runtime env
 dokku config:set interview-server \
-  CORS_ORIGIN=https://interview.feofanov.dev \
+  CORS_ORIGIN=https://<CLIENT_DOMAIN> \
   PISTON_URL=http://interview-piston.web:2000/api/v2
 
 # client build-time arg (Vite bakes this into the bundle)
 dokku docker-options:add interview-client build \
-  "--build-arg VITE_BACKEND_URL=https://api.interview.feofanov.dev"
+  "--build-arg VITE_BACKEND_URL=https://<SERVER_DOMAIN>"
 ```
 
 First-deploy ordering matters: deploy `interview-piston` first so its service
 hostname resolves when `interview-server` starts up, then deploy server, then
 client.
 
-DNS: create A records for `interview.feofanov.dev` and
-`api.interview.feofanov.dev` pointing at the Hetzner IP before enabling
+DNS: create A records for `<CLIENT_DOMAIN>` and
+`<SERVER_DOMAIN>` pointing at the Hetzner IP before enabling
 letsencrypt.
 
 ## Deploy flow (ongoing)
@@ -191,7 +191,7 @@ dokku run interview-server \
 
 ## Verification checklist
 
-- `https://interview.feofanov.dev` serves the Code-Sync UI
+- `https://<CLIENT_DOMAIN>` serves the Code-Sync UI
 - Open a room in two browsers — edits, chat, drawing, multi-cursor all sync
   in real time (confirms Socket.io over Dokku's nginx)
 - Run `print(2+2)` in Python — returns `4` (confirms client → server → Piston

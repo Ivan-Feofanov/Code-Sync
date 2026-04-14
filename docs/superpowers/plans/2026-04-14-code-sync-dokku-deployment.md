@@ -4,7 +4,7 @@
 
 **Goal:** Fork and deploy [sahilatahar/Code-Sync](https://github.com/sahilatahar/Code-Sync) as a self-hosted interview tool on a Hetzner VPS running Dokku, with a privately-hosted Piston (Python-only) backing code execution.
 
-**Architecture:** Three Dokku apps on a shared Dokku network: `interview-client` (static SPA, public on `interview.feofanov.dev`), `interview-server` (Express + Socket.io + Piston proxy, public on `api.interview.feofanov.dev`), and `interview-piston` (privileged code-execution container, internal only). The monorepo is split per-app via the `dokku-monorepo` plugin.
+**Architecture:** Three Dokku apps on a shared Dokku network: `interview-client` (static SPA, public on `<CLIENT_DOMAIN>`), `interview-server` (Express + Socket.io + Piston proxy, public on `<SERVER_DOMAIN>`), and `interview-piston` (privileged code-execution container, internal only). The monorepo is split per-app via the `dokku-monorepo` plugin.
 
 **Tech Stack:** React/Vite, Express, Socket.io, Node 20, Docker, Dokku, Piston (`ghcr.io/engineer-man/piston`), Vitest + Supertest (new, for the proxy endpoint test).
 
@@ -48,13 +48,13 @@ After this plan runs, the fork will contain:
 
 - [ ] **Step 1: Fork via GitHub UI**
 
-Go to https://github.com/sahilatahar/Code-Sync, click Fork, target account `Ivan-Feofanov`. Uncheck "Copy the main branch only" only if you want tags. Default settings otherwise.
+Go to https://github.com/sahilatahar/Code-Sync, click Fork, target account `<your-github-user>`. Uncheck "Copy the main branch only" only if you want tags. Default settings otherwise.
 
 - [ ] **Step 2: Clone the fork locally**
 
 ```bash
 cd ~/work
-git clone git@github.com:Ivan-Feofanov/Code-Sync.git
+git clone git@github.com:<your-github-user>/Code-Sync.git
 cd Code-Sync
 ```
 
@@ -76,7 +76,7 @@ Expected: both images build successfully. If this fails on upstream code, stop a
 
 ```bash
 mkdir -p docs/superpowers/specs
-cp /Users/feofanov/work/pa/docs/superpowers/specs/2026-04-14-code-sync-dokku-deployment-design.md \
+cp <your-workspace>/docs/superpowers/specs/2026-04-14-code-sync-dokku-deployment-design.md \
    docs/superpowers/specs/
 git add docs/
 git commit -m "docs: add Dokku deployment design spec"
@@ -631,8 +631,8 @@ CLIENT=interview-client
 SERVER=interview-server
 PISTON=interview-piston
 NET=interview-net
-CLIENT_DOMAIN=interview.feofanov.dev
-SERVER_DOMAIN=api.interview.feofanov.dev
+CLIENT_DOMAIN=<CLIENT_DOMAIN>
+SERVER_DOMAIN=<SERVER_DOMAIN>
 
 have_app() { dokku apps:exists "$1" >/dev/null 2>&1; }
 have_net() { dokku network:exists "$NET" >/dev/null 2>&1; }
@@ -698,14 +698,14 @@ chmod +x deploy/dokku-bootstrap.sh
 
 - Dokku installed
 - `letsencrypt` plugin installed: `sudo dokku plugin:install https://github.com/dokku/dokku-letsencrypt.git`
-- DNS A records for `interview.feofanov.dev` and `api.interview.feofanov.dev`
+- DNS A records for `<CLIENT_DOMAIN>` and `<SERVER_DOMAIN>`
   pointing at the VPS IP
 - Your public SSH key added to the `dokku` user (`ssh-copy-id dokku@<vps>`)
 
 ## 1. Bootstrap (one-time, on the VPS)
 
 ```bash
-git clone https://github.com/Ivan-Feofanov/Code-Sync.git /tmp/code-sync-bootstrap
+git clone https://github.com/<your-github-user>/Code-Sync.git /tmp/code-sync-bootstrap
 cd /tmp/code-sync-bootstrap
 ./deploy/dokku-bootstrap.sh
 ```
@@ -762,14 +762,14 @@ Expected JSON response with `"language": "python"` and `"version": "3.12.0"`.
 Verify:
 
 ```bash
-curl https://api.interview.feofanov.dev/api/piston/runtimes | jq
+curl https://<SERVER_DOMAIN>/api/piston/runtimes | jq
 ```
 
 Should include Python 3.12.0.
 
 ## 5. Verification
 
-- Open `https://interview.feofanov.dev` — Code-Sync UI loads
+- Open `https://<CLIENT_DOMAIN>` — Code-Sync UI loads
 - Create a room; open it in a second browser. Type code in one → appears in
   the other (Socket.io is working through Dokku's default nginx).
 - Select Python in the language picker, type `print(2+2)`, click Run —
@@ -854,10 +854,10 @@ git pull
 - [ ] **Step 1: Create DNS records**
 
 In your DNS provider: two A records pointing at the Hetzner IP:
-- `interview.feofanov.dev`
-- `api.interview.feofanov.dev`
+- `<CLIENT_DOMAIN>`
+- `<SERVER_DOMAIN>`
 
-Verify: `dig +short interview.feofanov.dev` returns the VPS IP.
+Verify: `dig +short <CLIENT_DOMAIN>` returns the VPS IP.
 
 - [ ] **Step 2: Ensure `letsencrypt` plugin is installed on the VPS**
 
@@ -871,7 +871,7 @@ sudo dokku plugin:list | grep letsencrypt || \
 
 ```bash
 ssh <vps>
-git clone https://github.com/Ivan-Feofanov/Code-Sync.git /tmp/code-sync-bootstrap
+git clone https://github.com/<your-github-user>/Code-Sync.git /tmp/code-sync-bootstrap
 cd /tmp/code-sync-bootstrap
 ./deploy/dokku-bootstrap.sh
 ```
@@ -930,7 +930,7 @@ Expected: build, start, `Listening on port <PORT>` in logs.
 git push dokku-client main
 ```
 
-Expected: build completes with `VITE_BACKEND_URL=https://api.interview.feofanov.dev` baked into the bundle.
+Expected: build completes with `VITE_BACKEND_URL=https://<SERVER_DOMAIN>` baked into the bundle.
 
 - [ ] **Step 5: Install Python in Piston**
 
@@ -950,7 +950,7 @@ Expected: `{"language":"python","version":"3.12.0"}` (or similar success JSON).
 From your laptop:
 
 ```bash
-curl -s https://api.interview.feofanov.dev/api/piston/runtimes | jq
+curl -s https://<SERVER_DOMAIN>/api/piston/runtimes | jq
 ```
 
 Expected: array containing `{"language":"python","version":"3.12.0", ...}`.
@@ -963,7 +963,7 @@ Expected: array containing `{"language":"python","version":"3.12.0", ...}`.
 
 - [ ] **Step 1: Load the UI**
 
-Open `https://interview.feofanov.dev` in a browser. Expected: Code-Sync UI loads with a valid TLS cert.
+Open `https://<CLIENT_DOMAIN>` in a browser. Expected: Code-Sync UI loads with a valid TLS cert.
 
 - [ ] **Step 2: Multi-user collaboration check**
 
@@ -997,7 +997,7 @@ Wait ~10 seconds, then re-run the code in the browser. Expected: still works wit
 ssh <vps> sudo reboot
 ```
 
-Wait for the box to come back (~30s). Hit `https://interview.feofanov.dev` again. Expected: everything works, TLS still valid.
+Wait for the box to come back (~30s). Hit `https://<CLIENT_DOMAIN>` again. Expected: everything works, TLS still valid.
 
 ---
 
