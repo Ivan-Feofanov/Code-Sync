@@ -1,11 +1,13 @@
 import { FileSystemItem, Id } from "@/types/file"
 import { v4 as uuidv4 } from "uuid"
 
-const initialCode = `function sayHi() {
-  console.log("👋 Hello world");
-}
+const initialCode = `def main() -> None:
+    pass
 
-sayHi()`
+
+if __name__ == "__main__":
+    main()
+`
 
 export const initialFileStructure: FileSystemItem = {
     name: "root",
@@ -15,7 +17,7 @@ export const initialFileStructure: FileSystemItem = {
         {
             id: uuidv4(),
             type: "file",
-            name: "index.js",
+            name: "main.py",
             content: initialCode,
         },
     ],
