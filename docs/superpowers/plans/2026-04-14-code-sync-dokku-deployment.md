@@ -238,9 +238,7 @@ beforeAll(async () => {
   server = (mod as any).server
 })
 
-afterAll((done) => {
-  server.close(() => done())
-})
+afterAll(() => new Promise<void>((resolve) => server.close(() => resolve())))
 
 describe("CORS", () => {
   it("echoes the configured origin when it matches", async () => {
@@ -372,9 +370,7 @@ beforeAll(async () => {
   server = (mod as any).server
 })
 
-afterAll((done) => {
-  server.close(() => done())
-})
+afterAll(() => new Promise<void>((resolve) => server.close(() => resolve())))
 
 describe("/api/piston proxy", () => {
   it("GET /api/piston/runtimes returns upstream list", async () => {
