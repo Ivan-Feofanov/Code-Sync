@@ -28,12 +28,10 @@ dokku builder:set "$CLIENT" build-dir client
 dokku builder:set "$SERVER" build-dir server
 dokku builder:set "$PISTON" build-dir piston
 
-# --- piston: privileged + host cgroup namespace + persistent package volume ---
-# --cgroupns=host is required so Piston's entrypoint can enable cgroup v2
-# subtree controllers on the host's cgroup tree; otherwise the root cgroup
-# inside the container has multiple processes and the setup fails with EBUSY.
+# --- piston: privileged + persistent package volume ---
+# The patched entrypoint (see piston/entrypoint.sh) handles cgroup v2 setup
+# correctly with the default cgroupns=private, so we only need --privileged.
 dokku docker-options:add "$PISTON" deploy,run "--privileged"
-dokku docker-options:add "$PISTON" deploy,run "--cgroupns=host"
 sudo mkdir -p /var/lib/dokku/data/storage/piston
 sudo chown -R dokku:dokku /var/lib/dokku/data/storage/piston
 dokku storage:mount "$PISTON" /var/lib/dokku/data/storage/piston:/piston/packages
