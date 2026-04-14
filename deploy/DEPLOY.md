@@ -8,17 +8,26 @@
   pointing at the VPS IP
 - Your public SSH key added to the `dokku` user (`ssh-copy-id dokku@<vps>`)
 
-## 1. Bootstrap (one-time, on the VPS)
+## 1. Bootstrap (one-time)
+
+Run the bootstrap script from your laptop by piping it over SSH — nothing
+stays on the VPS afterwards:
 
 ```bash
-git clone https://github.com/Ivan-Feofanov/Code-Sync.git /tmp/code-sync-bootstrap
-cd /tmp/code-sync-bootstrap
-./deploy/dokku-bootstrap.sh
+ssh <vps> 'bash -s' < deploy/dokku-bootstrap.sh
 ```
 
-This installs the `dokku-monorepo` plugin, creates the three apps, wires up
-the internal network, mounts the Piston package volume, configures env vars
-and domains, and attempts to issue Let's Encrypt certs.
+Alternative: scp the script first, then run it.
+
+```bash
+scp deploy/dokku-bootstrap.sh <vps>:/tmp/
+ssh <vps> 'bash /tmp/dokku-bootstrap.sh'
+```
+
+Either way, the script installs the `dokku-monorepo` plugin, creates the
+three apps, wires up the internal network, mounts the Piston package
+volume, configures env vars and domains, and attempts to issue Let's
+Encrypt certs.
 
 If DNS isn't propagated yet, Let's Encrypt will fail — rerun the enable
 commands later:
