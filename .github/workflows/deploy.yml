@@ -43,6 +43,7 @@ jobs:
         with:
           git_remote_url: ssh://dokku@${{ secrets.DOKKU_HOST }}:22/interview-piston
           ssh_private_key: ${{ secrets.DOKKU_SSH_KEY }}
+          branch: main
 
       - name: Deploy interview-server
         if: steps.filter.outputs.server == 'true' || github.event.inputs.force_all == 'true'
@@ -50,6 +51,7 @@ jobs:
         with:
           git_remote_url: ssh://dokku@${{ secrets.DOKKU_HOST }}:22/interview-server
           ssh_private_key: ${{ secrets.DOKKU_SSH_KEY }}
+          branch: main
 
       - name: Deploy interview-client
         if: steps.filter.outputs.client == 'true' || github.event.inputs.force_all == 'true'
@@ -57,3 +59,4 @@ jobs:
         with:
           git_remote_url: ssh://dokku@${{ secrets.DOKKU_HOST }}:22/interview-client
           ssh_private_key: ${{ secrets.DOKKU_SSH_KEY }}
+          branch: main
