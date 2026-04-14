@@ -14,12 +14,6 @@ SERVER_DOMAIN=api.interview.feofanov.dev
 have_app() { dokku apps:exists "$1" >/dev/null 2>&1; }
 have_net() { dokku network:exists "$NET" >/dev/null 2>&1; }
 
-# --- plugin ---
-if ! dokku plugin:list | grep -q '^  monorepo '; then
-  echo "Installing dokku-monorepo plugin (requires root)..."
-  sudo dokku plugin:install https://github.com/crisward/dokku-monorepo
-fi
-
 # --- network ---
 have_net || dokku network:create "$NET"
 
@@ -29,10 +23,10 @@ for app in "$CLIENT" "$SERVER" "$PISTON"; do
   dokku network:set "$app" attach-post-deploy "$NET"
 done
 
-# --- monorepo subdirs ---
-dokku config:set --no-restart "$CLIENT" MONOREPO_SUBDIR=client
-dokku config:set --no-restart "$SERVER" MONOREPO_SUBDIR=server
-dokku config:set --no-restart "$PISTON" MONOREPO_SUBDIR=piston
+# --- monorepo subdirs (Dokku native build-dir, no plugin needed) ---
+dokku builder:set "$CLIENT" build-dir client
+dokku builder:set "$SERVER" build-dir server
+dokku builder:set "$PISTON" build-dir piston
 
 # --- piston: privileged + persistent package volume ---
 dokku docker-options:add "$PISTON" deploy,run "--privileged"
