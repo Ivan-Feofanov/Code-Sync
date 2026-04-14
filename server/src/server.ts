@@ -6,6 +6,7 @@ import { SocketEvent, SocketId } from "./types/socket"
 import { USER_CONNECTION_STATUS, User } from "./types/user"
 import { Server } from "socket.io"
 import path from "path"
+import pistonRouter from "./piston"
 
 dotenv.config()
 
@@ -17,6 +18,8 @@ const app = express()
 app.use(express.json())
 
 app.use(cors({ origin: corsOrigins }))
+
+app.use("/api/piston", pistonRouter)
 
 app.use(express.static(path.join(__dirname, "public"))) // Serve static files
 
