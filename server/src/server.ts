@@ -9,19 +9,20 @@ import path from "path"
 
 dotenv.config()
 
+const CORS_ORIGIN = process.env.CORS_ORIGIN || "*"
+const corsOrigins = CORS_ORIGIN === "*" ? "*" : CORS_ORIGIN.split(",").map((s) => s.trim())
+
 const app = express()
 
 app.use(express.json())
 
-app.use(cors())
+app.use(cors({ origin: corsOrigins }))
 
 app.use(express.static(path.join(__dirname, "public"))) // Serve static files
 
 const server = http.createServer(app)
 const io = new Server(server, {
-	cors: {
-		origin: "*",
-	},
+	cors: { origin: corsOrigins },
 	maxHttpBufferSize: 1e8,
 	pingTimeout: 60000,
 })
@@ -295,3 +296,5 @@ app.get("/", (req: Request, res: Response) => {
 server.listen(PORT, () => {
 	console.log(`Listening on port ${PORT}`)
 })
+
+export { app, server, io }
