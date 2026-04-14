@@ -3,7 +3,6 @@ enum VIEWS {
     CHATS = "CHATS",
     CLIENTS = "CLIENTS",
     RUN = "RUN",
-    COPILOT = "COPILOT",
     SETTINGS = "SETTINGS",
 }
 
