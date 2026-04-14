@@ -1,15 +1,22 @@
 #!/usr/bin/env bash
 # Idempotent Dokku bootstrap for the interview stack.
-# Run as the dokku user (or via sudo -u dokku) on the VPS.
-# Usage: ./dokku-bootstrap.sh
+# Run as root (or via sudo) on the VPS.
+#
+# Required env vars:
+#   CLIENT_DOMAIN  - public domain for the client, e.g. interview.example.com
+#   SERVER_DOMAIN  - public domain for the server, e.g. api.interview.example.com
+#
+# Usage:
+#   CLIENT_DOMAIN=... SERVER_DOMAIN=... sudo -E bash dokku-bootstrap.sh
 set -euo pipefail
+
+: "${CLIENT_DOMAIN:?Set CLIENT_DOMAIN env var (public domain for the client)}"
+: "${SERVER_DOMAIN:?Set SERVER_DOMAIN env var (public domain for the server)}"
 
 CLIENT=interview-client
 SERVER=interview-server
 PISTON=interview-piston
 NET=interview-net
-CLIENT_DOMAIN=interview.feofanov.dev
-SERVER_DOMAIN=api.interview.feofanov.dev
 
 have_app() { dokku apps:exists "$1" >/dev/null 2>&1; }
 have_net() { dokku network:exists "$NET" >/dev/null 2>&1; }
